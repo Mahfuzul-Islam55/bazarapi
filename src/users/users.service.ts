@@ -5,7 +5,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { UserSignUpDto } from './dto/user-signup.dto';
-import { hash } from 'bcrypt';
+import { hash, compare } from 'bcrypt';
+import { UserSignInDto } from './dto/user-signin.dto';
+import { sign } from 'jsonwebtoken';
 @Injectable()
 export class UsersService {
   constructor(
@@ -23,6 +25,25 @@ export class UsersService {
     delete user.password;
     return user;
   }
+
+  async signin(userSignInDto: UserSignInDto): Promise<UserEntity> {
+    const userExists = await this.usersRepository
+      .createQueryBuilder('users')
+      .addSelect('users.password')
+      .where('users.email=:email', { email: userSignInDto.email })
+      .getOne();
+    console.log('User exists: ', userExists);
+    if (!userExists) throw new BadRequestException('User is not exists');
+    const matchPassword = await compare(
+      userSignInDto.password,
+      userExists.password,
+    );
+    if (!matchPassword)
+      throw new BadRequestException('Password is not correct');
+    delete userExists.password;
+    return userExists;
+  }
+
   create(createUserDto: CreateUserDto) {
     return 'This action adds a new user';
   }
@@ -43,7 +64,14 @@ export class UsersService {
     return `This action removes a #${id} user`;
   }
 
-  async findUserByEmail(email: string) {
+  async findUserByEmail(email: string): Promise<UserEntity> {
     return await this.usersRepository.findOneBy({ email: email });
+  }
+  async accessToken(user: UserEntity): Promise<string> {
+    return sign(
+      { id: user.id, email: user.email },
+      process.env.ACCESS_TOKEN_SECRET_KEY,
+      { expiresIn: process.env.ACCESS_TOKEN_EXPIRE_TIME },
+    );
   }
 }
