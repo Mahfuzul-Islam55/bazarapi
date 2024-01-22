@@ -13,6 +13,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { UserSignUpDto } from './dto/user-signup.dto';
 import { UserEntity } from './entities/user.entity';
 import { UserSignInDto } from './dto/user-signin.dto';
+import { CurrentUser } from 'src/utility/common/decorators/current-user.decorator';
 
 @Controller('users')
 export class UsersController {
@@ -47,6 +48,10 @@ export class UsersController {
     return await this.usersService.findOne(+id);
   }
 
+  @Get('me')
+  getProfile(@CurrentUser() currentUser: UserEntity) {
+    return currentUser;
+  }
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(+id, updateUserDto);
