@@ -31,6 +31,7 @@ export const AuthorizeGuard = (allowedRoles: string[]) => {
       const result = request?.currentUser?.roles
         .map((role: string) => allowedRoles.includes(role))
         .find((val: boolean) => val === true);
+      console.log('createCategory: ', result);
 
       if (result) return true;
       else throw new UnauthorizedException('Sorry, you are not authorized.');

@@ -27,7 +27,8 @@ export class CurrentUserMiddleware implements NestMiddleware {
       next();
     } else {
       try {
-        const token = authHeader.split('  ')[1];
+        const token = authHeader.split(' ')[1];
+        console.log('authorization token: ', token);
         const { id } = <JwtPayload>(
           verify(token, process.env.ACCESS_TOKEN_SECRET_KEY)
         );
